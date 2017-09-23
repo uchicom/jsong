@@ -1,23 +1,23 @@
 # jsong
 ## json generator
 
-##Sample Program
-`Jsong jsong = new Jsong(File file);`  
-`String jsonString1 = jsong.generate("001");`  
-`String jsonString2 = jsong.generate("002");`  
+## Sample Program
+`Jsong jsong = new Jsong(File file);`
+`String jsonString1 = jsong.generate("001");`
+`String jsonString2 = jsong.generate("002");`
 
-##Sample Csv File
+## Sample Csv File
 
-|キー|||型|001|002|  
-|---|---|---|---|---|---|  
-|obj1|||{}|||  
-||prop1||String|val1|val2|  
-||prop2||Number|22|33|  
-||prop3||Boolean|true|false|  
-||obj2||{}|||  
-|||prop4|String|val3|va4|  
-|||prop5|Number|3|4|  
-|||prop6|Boolean|true|false|  
+|キー|||型|001|002|
+|---|---|---|---|---|---|
+|obj1|||{}|||
+||prop1||String|val1|val2|
+||prop2||Number|22|33|
+||prop3||Boolean|true|false|
+||obj2||{}|||
+|||prop4|String|val3|va4|
+|||prop5|Number|3|4|
+|||prop6|Boolean|true|false|
 
 
 ##sample config file
