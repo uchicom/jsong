@@ -11,7 +11,7 @@
 |キー|||型|001|002|
 |---|---|---|---|---|---|
 ||||{}|||
-obj1||||{}|||
+obj1|||{}|||
 |prop1|||String|val1|val2|
 |prop2|||Number|22|33|
 |prop3|||Boolean|true|false|
