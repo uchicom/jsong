@@ -124,7 +124,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.uchicom</groupId>
-			<artifactId>jsong</artifactId>
+			<artifactId>ui</artifactId>
 			<version>0.1.0</version>
 		</dependency>
 	</dependencies>
