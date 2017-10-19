@@ -2,7 +2,6 @@
 package com.uchicom.jsong;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.List;
@@ -80,11 +79,7 @@ public class Jsong {
 
 	}
 
-	/**
-	 * @param file
-	 * @throws IOException
-	 */
-	public String generate(String column) throws IOException {
+	public String generate(String column) {
 		if (column == null) {
 			throw new IllegalArgumentException("パラメータを指定してください");
 		}

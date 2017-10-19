@@ -16,7 +16,7 @@ public class Main {
 	/**
 	 * ファイル名とコードを指定してファイルを作成する。
 	 * 出力結果はファイル名+_jsonディレクトリ/カラム名+.jsonファイル.
-	 * @param args
+	 * @param args パラメータ引数
 	 */
 	public static void main(String[] args) {
 		try {
