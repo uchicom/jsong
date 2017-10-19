@@ -121,4 +121,11 @@
 			</plugin>
 		</plugins>
 	</build>
+	<dependencies>
+		<dependency>
+			<groupId>com.uchicom</groupId>
+			<artifactId>jsong</artifactId>
+			<version>0.1.0</version>
+		</dependency>
+	</dependencies>
 </project>
