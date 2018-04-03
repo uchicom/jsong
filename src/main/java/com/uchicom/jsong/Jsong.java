@@ -4,10 +4,14 @@ package com.uchicom.jsong;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-import com.uchicom.ui.util.ResourceUtil;
+import com.uchicom.util.ResourceUtil;
 
 /**
  * @author uchicom: Shigeki Uchiyama
@@ -79,6 +83,64 @@ public class Jsong {
 
 	}
 
+	public String generate(String method, Map<String, String[]> paramMap) {
+		if (method == null) {
+			method = "GET";
+		}
+		if (paramMap == null) {
+			throw new IllegalArgumentException("パラメータを指定してください");
+		}
+		// value列を探す
+		int valueIndex = -1;
+		for (int i = valueStartIndex; i < valueStartIndex + valueLength; i++) {
+			String[] methods = heads[i].split(":");
+			String head = null;
+			if (methods.length == 1) {
+				if ("POST".equals(method)) {
+					continue;
+				} else {
+					head = methods[0];
+				}
+			} else if (methods.length > 1) {
+				if (methods[0].equals(method)) {
+					head = methods[1];
+				} else {
+					continue;
+				}
+			}
+			String[] params = head.split("&");
+			Map<String, List<String>> listMap = new HashMap<>();
+			for (String param : params) {
+				String[] keyValues = param.split("=");
+				List<String> stringList = null;
+				if (listMap.containsKey(keyValues[0])) {
+					stringList = listMap.get(keyValues[0]);
+				} else {
+					stringList = new ArrayList<>();
+					listMap.put(keyValues[0], stringList);
+				}
+				stringList.add(keyValues[1]);
+			}
+			Map<String, List<String>> paramListMap = new HashMap<>();
+			paramMap.forEach((key, array)->{
+				paramListMap.put(key, Arrays.asList(array));
+			});
+			if (paramListMap.equals(listMap)) {
+				valueIndex = i;
+				break;
+			}
+		}
+		if (valueIndex < 0) {
+			throw new IllegalArgumentException("パラメータに一致するバリュー列がありません");
+		}
+		String[] rows = rowList.get(1).split(",");
+		StringBuffer strBuff = new StringBuffer(1024 * 4);
+		strBuff.append(rows[typeIndex].substring(0, 1));
+		generate(2, keyStartIndex, valueIndex, 0, strBuff, false);
+		strBuff.append(rows[typeIndex].substring(1, 2));
+		System.out.println("result:" + strBuff.toString());
+		return strBuff.toString();
+	}
 	public String generate(String column) {
 		if (column == null) {
 			throw new IllegalArgumentException("パラメータを指定してください");
@@ -104,12 +166,12 @@ public class Jsong {
 	}
 
 	public int generate(int rowIndex, int keyIndex, int valueIndex, int depth, StringBuffer strBuff, boolean isArray) {
-		if (rowIndex >= rowMax)
-			return -1;
-
+		if (rowIndex >= rowMax) {
+			return rowIndex;
+		}
 		boolean start = true;
 		while (rowIndex < rowMax) {
-
+			System.out.println(rowList.size() + ":" + rowMax + ":" + rowIndex);
 			String[] rows = rowList.get(rowIndex).split(",");
 			if ("".equals(rows[keyIndex + depth])) {
 				break;
