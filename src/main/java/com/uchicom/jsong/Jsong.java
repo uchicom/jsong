@@ -83,7 +83,7 @@ public class Jsong {
 
 	}
 
-	public String generate(String method, Map<String, String[]> paramMap) {
+	public HttpResult generate(String method, Map<String, String[]> paramMap) {
 		if (method == null) {
 			method = "GET";
 		}
@@ -92,8 +92,9 @@ public class Jsong {
 		}
 		// value列を探す
 		int valueIndex = -1;
+		String responseHeader = null;
 		for (int i = valueStartIndex; i < valueStartIndex + valueLength; i++) {
-			String[] methods = heads[i].split(":");
+			String[] methods = heads[i].split("\\|");
 			String head = null;
 			if (methods.length == 1) {
 				if ("POST".equals(method)) {
@@ -101,11 +102,35 @@ public class Jsong {
 				} else {
 					head = methods[0];
 				}
-			} else if (methods.length > 1) {
-				if (methods[0].equals(method)) {
-					head = methods[1];
-				} else {
-					continue;
+			} else if (methods.length == 2) {
+				switch (methods[0]) {
+				case "GET":
+				case "POST":
+					if (methods[0].equals(method)) {
+						head = methods[1];
+					} else {
+						continue;
+					}
+					default:
+						if ("POST".equals(method)) {
+							continue;
+						} else {
+							responseHeader = methods[0];
+							head = methods[1];
+						}
+				}
+			} else if (methods.length == 3) {
+				switch (methods[0]) {
+				case "GET":
+				case "POST":
+					if (methods[0].equals(method)) {
+						responseHeader = methods[1];
+						head = methods[2];
+					} else {
+						continue;
+					}
+					default:
+						continue;
 				}
 			}
 			String[] params = head.split("&");
@@ -139,7 +164,10 @@ public class Jsong {
 		generate(2, keyStartIndex, valueIndex, 0, strBuff, false);
 		strBuff.append(rows[typeIndex].substring(1, 2));
 		System.out.println("result:" + strBuff.toString());
-		return strBuff.toString();
+		HttpResult result = new HttpResult();
+		result.setHeader(responseHeader);
+		result.setBody(strBuff.toString());
+		return result;
 	}
 	public String generate(String column) {
 		if (column == null) {
