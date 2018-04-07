@@ -26,6 +26,7 @@ public class Jsong {
 	private String[] heads;
 	private int keyStartIndex = -1;
 	private int keyLength = -1;
+	private int httpIndex = -1;
 	private int typeIndex = -1;
 	private int valueStartIndex = -1;
 	private int valueLength = -1;
@@ -49,6 +50,7 @@ public class Jsong {
 			heads = titleLine.split(",");
 			String key = config.getProperty(Constants.PROP_KEY);
 			String type = config.getProperty(Constants.PROP_TYPE);
+			String http = config.getProperty(Constants.PROP_HTTP);
 			for (int i = 0; i < heads.length; i++) {
 				if (keyStartIndex < 0 && key.equals(heads[i])) {
 					keyStartIndex = i;
@@ -58,6 +60,9 @@ public class Jsong {
 				}
 				if (typeIndex < 0 && type.equals(heads[i])) {
 					typeIndex = i;
+				}
+				if (httpIndex < 0 && http.equals(heads[i])) {
+					httpIndex = i;
 				}
 
 				if (keyStartIndex >= 0 && keyLength >= 0 && typeIndex >= 0 && keyStartIndex != i && typeIndex != i
@@ -92,48 +97,51 @@ public class Jsong {
 		}
 		// value列を探す
 		int valueIndex = -1;
+		int methodIndex = -1;
+		int headIndex = -1;
+		int bodyIndex = -1;
 		String responseHeader = null;
-		for (int i = valueStartIndex; i < valueStartIndex + valueLength; i++) {
-			String[] methods = heads[i].split("\\|");
-			String head = null;
-			if (methods.length == 1) {
-				if ("POST".equals(method)) {
-					continue;
-				} else {
-					head = methods[0];
-				}
-			} else if (methods.length == 2) {
-				switch (methods[0]) {
-				case "GET":
-				case "POST":
-					if (methods[0].equals(method)) {
-						head = methods[1];
-					} else {
-						continue;
-					}
-					default:
-						if ("POST".equals(method)) {
-							continue;
-						} else {
-							responseHeader = methods[0];
-							head = methods[1];
-						}
-				}
-			} else if (methods.length == 3) {
-				switch (methods[0]) {
-				case "GET":
-				case "POST":
-					if (methods[0].equals(method)) {
-						responseHeader = methods[1];
-						head = methods[2];
-					} else {
-						continue;
-					}
-					default:
-						continue;
-				}
-			}
-			String[] params = head.split("&");
+		VALUE_HEAD:for (int i = valueStartIndex; i < valueStartIndex + valueLength; i++) {
+//			String[] methods = heads[i].split("\\|");
+//			String head = null;
+//			if (methods.length == 1) {
+//				if ("POST".equals(method)) {
+//					continue;
+//				} else {
+//					head = methods[0];
+//				}
+//			} else if (methods.length == 2) {
+//				switch (methods[0]) {
+//				case "GET":
+//				case "POST":
+//					if (methods[0].equals(method)) {
+//						head = methods[1];
+//					} else {
+//						continue;
+//					}
+//					default:
+//						if ("POST".equals(method)) {
+//							continue;
+//						} else {
+//							responseHeader = methods[0];
+//							head = methods[1];
+//						}
+//				}
+//			} else if (methods.length == 3) {
+//				switch (methods[0]) {
+//				case "GET":
+//				case "POST":
+//					if (methods[0].equals(method)) {
+//						responseHeader = methods[1];
+//						head = methods[2];
+//					} else {
+//						continue;
+//					}
+//					default:
+//						continue;
+//				}
+//			}
+			String[] params = heads[i].split("&");
 			Map<String, List<String>> listMap = new HashMap<>();
 			for (String param : params) {
 				String[] keyValues = param.split("=");
@@ -146,11 +154,46 @@ public class Jsong {
 				}
 				stringList.add(keyValues[1]);
 			}
+			Map<String, List<String>> newListMap = new HashMap<>();
+			listMap.forEach((key, value) -> {
+				if (value.size() > 1) {
+					newListMap.put(key + "[]", value);
+				} else {
+					newListMap.put(key, value);
+				}
+			});
 			Map<String, List<String>> paramListMap = new HashMap<>();
 			paramMap.forEach((key, array)->{
 				paramListMap.put(key, Arrays.asList(array));
 			});
-			if (paramListMap.equals(listMap)) {
+			System.out.println("param:" + paramListMap);
+			System.out.println("list:" + listMap);
+			boolean methodOK = false;
+			if (paramListMap.equals(newListMap)) {
+				System.out.println("equals");
+				for (int j = 1; j < rowList.size(); j++) {
+					String[] rows = rowList.get(j).split(",");
+					if ("method".equals(rows[httpIndex])) {
+						if ("".equals(rows[i]) ||
+								method.equals(rows[i])) {
+							System.out.println("methodOK!");
+							methodIndex = j;
+							methodOK = true;
+						} else {
+							continue VALUE_HEAD;
+						}
+					} else if (("head").equals(rows[httpIndex])) {
+						headIndex = j;
+					} else if (("body").equals(rows[httpIndex])) {
+						bodyIndex = j;
+						break;
+					}
+					
+				}
+				if (!methodOK) {
+					continue VALUE_HEAD;
+				}
+				
 				valueIndex = i;
 				break;
 			}
@@ -158,10 +201,14 @@ public class Jsong {
 		if (valueIndex < 0) {
 			throw new IllegalArgumentException("パラメータに一致するバリュー列がありません");
 		}
-		String[] rows = rowList.get(1).split(",");
+		System.out.println("valueIndex:" + valueIndex);
+		String[] heads = rowList.get(headIndex).split(",");
+		responseHeader = heads[typeIndex] + ": " + heads[valueIndex];
+		System.out.println(responseHeader);
+		String[] rows = rowList.get(bodyIndex).split(",");
 		StringBuffer strBuff = new StringBuffer(1024 * 4);
 		strBuff.append(rows[typeIndex].substring(0, 1));
-		generate(2, keyStartIndex, valueIndex, 0, strBuff, false);
+		generate(bodyIndex + 1, keyStartIndex, valueIndex, 0, strBuff, false);
 		strBuff.append(rows[typeIndex].substring(1, 2));
 		System.out.println("result:" + strBuff.toString());
 		HttpResult result = new HttpResult();
